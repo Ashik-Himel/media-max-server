@@ -35,7 +35,11 @@ async function run() {
 
     // Employees' Api
     app.get('/employees', async(req, res) => {
-      const result = await employeeCollection.find().project({_id: 0, id: 1, name: 1, designation: 1, phone: 1, dhHouse: 1, photo: 1}).toArray();
+      let filter = {};
+      if (req.query.search) {
+        filter = { name: { $regex: req.query.search, $options: 'i' } }
+      }
+      const result = await employeeCollection.find(filter).project({_id: 0, id: 1, name: 1, designation: 1, phone: 1, dhHouse: 1, photo: 1}).toArray();
       res.send(result);
     })
     app.post('/employees', async(req, res) => {
@@ -69,6 +73,13 @@ async function run() {
     app.get('/chairman', async(req, res) => {
       const result = await chairmanCollection.findOne();
       res.send(result)
+    })
+    app.put('/chairman', async(req, res) => {
+      const updatedDocument = {
+        $set: req.body
+      }
+      const result = await chairmanCollection.updateOne({}, updatedDocument);
+      res.send(result);
     })
 
     // Team Members' Api
