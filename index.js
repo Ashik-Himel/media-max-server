@@ -9,7 +9,11 @@ const app = express();
 const port = process.env.PORT || 5001;
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://media-max.web.app', 'https://media-max.firebaseapp.com'],
+  origin: [
+    'http://localhost:5173',
+    'https://media-max.web.app',
+    'https://media-max.firebaseapp.com'
+  ],
   credentials: true
 }));
 app.use(express.json());
