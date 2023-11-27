@@ -10,9 +10,10 @@ const port = process.env.PORT || 5001;
 
 app.use(cors({
   origin: [
-    'http://localhost:5173',
+    'https://mediamax.com.bd',
     'https://media-max.web.app',
-    'https://media-max.firebaseapp.com'
+    'https://media-max.firebaseapp.com',
+    'http://localhost:5173'
   ],
   credentials: true
 }));
