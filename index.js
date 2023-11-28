@@ -105,6 +105,10 @@ async function run() {
       const result = await teamMemberCollection.deleteOne(filter);
       res.send(result);
     })
+    app.get('/teamCount', async(req, res) => {
+      const result = (await teamMemberCollection.countDocuments()).toString();
+      res.send(result);
+    })
 
   } finally {
     // await client.close();
