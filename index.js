@@ -83,6 +83,10 @@ async function run() {
       const result = await teamMemberCollection.find().toArray();
       res.send(result);
     })
+    app.post('/team', async(req, res) => {
+      const result = await teamMemberCollection.insertOne(req.body);
+      res.send(result);
+    })
     app.get('/team/:id', async(req, res) => {
       const filter = {_id: new ObjectId(req.params.id)}
       const result = await teamMemberCollection.findOne(filter);
@@ -96,6 +100,12 @@ async function run() {
       const result = await teamMemberCollection.updateOne(filter, updatedDocument);
       res.send(result);
     })
+    app.delete('/team/:id', async(req,res) => {
+      const filter = {_id: new ObjectId(req.params.id)};
+      const result = await teamMemberCollection.deleteOne(filter);
+      res.send(result);
+    })
+
   } finally {
     // await client.close();
   }
