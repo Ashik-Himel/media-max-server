@@ -58,7 +58,7 @@ async function run() {
       const result = await employeeCollection.deleteOne(filter);
       res.send(result);
     })
-    app.get('/employees/count', async(req, res) => {
+    app.get('/employeeCount', async(req, res) => {
       const result = (await employeeCollection.countDocuments()).toString();
       res.send(result);
     })
