@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const bodyParser = require('body-parser');
+const multer = require('multer');
+const fs = require('fs');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
@@ -8,6 +11,18 @@ const port = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json());
+
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@media-max-cluster.yrng6ax.mongodb.net/?retryWrites=true&w=majority`;
@@ -36,8 +51,12 @@ async function run() {
       const result = await employeeCollection.find(filter).toArray();
       res.send(result);
     })
-    app.post('/employees', async(req, res) => {
-      const result = await employeeCollection.insertOne(req.body);
+    app.post('/employees', upload.single('photo'), async(req, res) => {
+      const { id, name, designation, dhHouse, phone, status, birthDate, joiningDate, bloodGroup } = req.body;
+      const photo = 'https://server.mediamax.com.bd/uploads/' + req.file.filename;
+
+      const employee = {id, name, photo, designation, dhHouse, phone, status, birthDate, joiningDate, bloodGroup};
+      const result = await employeeCollection.insertOne(employee);
       res.send(result);
     })
     app.get('/employees/:id', async(req, res) => {
