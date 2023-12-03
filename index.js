@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const multer = require('multer');
-const fs = require('fs');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
@@ -64,10 +63,17 @@ async function run() {
       const result = await employeeCollection.findOne(filter);
       res.send(result);
     })
-    app.put('/employees/:id', async(req, res) => {
+    app.put('/employees/:id', upload.single('photo'), async(req, res) => {
+      const { id, name, designation, dhHouse, phone, status, birthDate, joiningDate, bloodGroup } = req.body;
+      let employee = {id, name, designation, dhHouse, phone, status, birthDate, joiningDate, bloodGroup};
+      if (req.file?.filename) {
+        const photo = 'https://server.mediamax.com.bd/uploads/' + req.file.filename;
+        employee = {id, name, photo, designation, dhHouse, phone, status, birthDate, joiningDate, bloodGroup};
+      }
+
       const filter = {id: req.params.id};
       const updatedDocument = {
-        $set: req.body
+        $set: employee
       }
       const result = await employeeCollection.updateOne(filter, updatedDocument);
       res.send(result);
@@ -88,10 +94,18 @@ async function run() {
       const result = await chairmanCollection.findOne(filter);
       res.send(result);
     })
-    app.put('/chairman', async(req, res) => {
+    app.put('/chairman', upload.single('photo'), async(req, res) => {
+      const {name, designation, about, achievements} = req.body;
+
+      let chairman = {name, designation, about, achievements}
+      if (req.file?.filename) {
+        const photo = 'https://server.mediamax.com.bd/uploads/' + req.file.filename;
+        chairman = {name, photo, designation, about, achievements};
+      }
+
       const filter = {_id: new ObjectId('65610aa021a0e77c6e5ba3e9')}
       const updatedDocument = {
-        $set: req.body
+        $set: chairman
       }
       const result = await chairmanCollection.updateOne(filter, updatedDocument);
       res.send(result);
@@ -102,8 +116,14 @@ async function run() {
       const result = await teamMemberCollection.find().toArray();
       res.send(result);
     })
-    app.post('/team', async(req, res) => {
-      const result = await teamMemberCollection.insertOne(req.body);
+    app.post('/team', upload.single('photo'), async(req, res) => {
+      const {name, designation, contact} = req.body;
+      const facebook = contact.facebook, email = contact.email, whatsapp = contact.whatsapp, phone = contact.phone;
+      const photo = 'https://server.mediamax.com.bd/uploads/' + req.file.filename;
+      let member = {name, photo, designation, contact: {
+        facebook, email, whatsapp, phone
+      }}
+      const result = await teamMemberCollection.insertOne(member);
       res.send(result);
     })
     app.get('/team/:id', async(req, res) => {
@@ -111,10 +131,23 @@ async function run() {
       const result = await teamMemberCollection.findOne(filter);
       res.send(result);
     })
-    app.put('/team/:id', async(req, res) => {
+    app.put('/team/:id', upload.single('photo'), async(req, res) => {
+      const {name, designation, contact} = req.body;
+      const facebook = contact.facebook, email = contact.email, whatsapp = contact.whatsapp, phone = contact.phone;
+
+      let member = {name, designation, contact: {
+        facebook, email, whatsapp, phone
+      }}
+      if (req.file?.filename) {
+        const photo = 'https://server.mediamax.com.bd/uploads/' + req.file.filename;
+        member = {name, photo, designation, contact: {
+          facebook, email, whatsapp, phone
+        }}
+      }
+
       const filter = {_id: new ObjectId(req.params.id)};
       const updatedDocument = {
-        $set: req.body
+        $set: member
       }
       const result = await teamMemberCollection.updateOne(filter, updatedDocument);
       res.send(result);
