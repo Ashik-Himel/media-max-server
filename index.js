@@ -13,8 +13,7 @@ const port = process.env.PORT || 5001;
 
 app.use(cors({
   origin: [
-    'https://www.mediamax.com.bd',
-    'https://media-max.web.app'
+    'https://www.mediamax.com.bd'
   ],
   credentials: true
 }));
