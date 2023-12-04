@@ -13,7 +13,12 @@ const port = process.env.PORT || 5001;
 
 app.use(cors({
   origin: [
-    'https://www.mediamax.com.bd'
+    'https://www.mediamax.com.bd',
+    'https://mediamax.com.bd',
+    'http://www.mediamax.com.bd',
+    'http://mediamax.com.bd',
+    'https://media-max.web.app',
+    'https://media-max.firebaseapp.com'
   ],
   credentials: true
 }));
@@ -104,8 +109,8 @@ async function run() {
         await viewCollection.updateOne({}, document, {upsert: true});
         res.cookie('visitor', randomString, {
           httpOnly: true,
-          secure: true,
-          sameSite: "none",
+          secure: false,
+          // sameSite: "none",
           maxAge: cookieAge
         }).send("New");
       } else {
@@ -132,7 +137,7 @@ async function run() {
       res.send(result);
     })
     app.get('/employees/:id', async(req, res) => {
-      const filter = {id: req.params.id};
+      const filter = {_id: new ObjectId(req.params.id)};
       const result = await employeeCollection.findOne(filter);
       res.send(result);
     })
@@ -144,7 +149,7 @@ async function run() {
         employee = {id, name, photo, designation, dhHouse, phone, status, birthDate, joiningDate, bloodGroup};
       }
 
-      const filter = {id: req.params.id};
+      const filter = {_id: new ObjectId(req.params.id)};
       const updatedDocument = {
         $set: employee
       }
@@ -152,7 +157,7 @@ async function run() {
       res.send(result);
     })
     app.delete('/employees/:id', async(req, res) => {
-      const filter = {id: req.params.id};
+      const filter = {_id: new ObjectId(req.params.id)};
       const result = await employeeCollection.deleteOne(filter);
       res.send(result);
     })
@@ -175,11 +180,10 @@ async function run() {
         chairman = {name, photo, designation, about, achievements};
       }
 
-      const filter = {_id: new ObjectId('65610aa021a0e77c6e5ba3e9')}
       const updatedDocument = {
         $set: chairman
       }
-      const result = await chairmanCollection.updateOne(filter, updatedDocument);
+      const result = await chairmanCollection.updateOne({}, updatedDocument);
       res.send(result);
     })
 
@@ -244,6 +248,6 @@ run().catch(console.dir);
 app.get('/', (req, res) => {
   res.send("Welcome to Media Max's server !!!");
 })
-app.listen(port)
+app.listen(port);
 
 module.exports = app;
