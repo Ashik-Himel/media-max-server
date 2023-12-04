@@ -1,16 +1,26 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const multer = require('multer');
+const crypto = require('crypto');
+const cron = require('node-cron');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 5001;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://www.mediamax.com.bd',
+    'https://mediamax.com.bd',
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 
 const storage = multer.diskStorage({
@@ -40,6 +50,70 @@ async function run() {
     const employeeCollection = database.collection('employees');
     const teamMemberCollection = database.collection('team-members');
     const chairmanCollection = database.collection('chairman');
+    const viewCollection = database.collection('views');
+    const visitorStateCollection = database.collection('visitor-state');
+
+    // Reset Count in Every Month
+    cron.schedule('0 0 0 1 * *', async() => {
+      const currentDate = new Date();
+      const monthArray = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      let prevMonth = '';
+      let prevYear = '';
+      if (currentDate.getMonth() === 0) {
+        prevMonth = 'December';
+        prevYear = currentDate.getFullYear() - 1;
+      } else {
+        prevMonth = monthArray[currentDate.getMonth() - 1];
+        prevYear = currentDate.getFullYear();
+      }
+
+      const views = await viewCollection.findOne({});
+      const document = {
+        month: prevMonth,
+        year: prevYear,
+        views: views.views
+      }
+      await visitorStateCollection.insertOne(document);
+
+      const updatedDocument = {
+        $set: {month: currentMonth, views: 0},
+      }
+      await viewCollection.updateOne({}, updatedDocument, {upsert: true});
+    })
+
+    // Views Count Api
+    app.get('/views', async(req, res) => {
+      const result = await viewCollection.findOne({});
+      res.send(result);
+    })
+    app.post('/views', async(req, res) => {
+      if (!(req.cookies?.visitor)) {
+        const randomString = crypto.randomBytes(64).toString('hex');
+
+        const currentDate = new Date();
+        const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        lastDayOfMonth.setHours(23, 59, 59, 999);
+        const cookieAge = lastDayOfMonth.getTime() - currentDate.getTime();
+
+        const monthArray = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const currentMonth = monthArray[currentDate.getMonth()];
+
+        const document = {
+          $set: {month: currentMonth},
+          $inc: {views: 1}
+        }
+        await viewCollection.updateOne({}, document, {upsert: true});
+        res.cookie('visitor', randomString, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          maxAge: cookieAge
+        }).send("New");
+      } else {
+        res.send('Existing');
+      }
+    })
+
 
     // Employees' Api
     app.get('/employees', async(req, res) => {
@@ -90,8 +164,7 @@ async function run() {
     
     // Chairman's Api
     app.get('/chairman', async(req, res) => {
-      const filter = {_id: new ObjectId('65610aa021a0e77c6e5ba3e9')}
-      const result = await chairmanCollection.findOne(filter);
+      const result = await chairmanCollection.findOne({});
       res.send(result);
     })
     app.put('/chairman', upload.single('photo'), async(req, res) => {
