@@ -109,8 +109,8 @@ async function run() {
         await viewCollection.updateOne({}, document, {upsert: true});
         res.cookie('visitor', randomString, {
           httpOnly: true,
-          secure: false,
-          // sameSite: "none",
+          secure: true,
+          sameSite: "none",
           maxAge: cookieAge
         }).send("New");
       } else {
